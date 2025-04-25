@@ -99,10 +99,14 @@ class Snake(GameObject):
     def __init__(self) -> None:
         """Инициализатора класса."""
         super().__init__()
-        self.positions: list = [START_POSITION]
-        self.direction: tuple = RIGHT
         self.next_direction: tuple | None = None
         self.body_color: tuple = SNAKE_COLOR
+        self.reset()
+
+    def reset(self) -> None:
+        """Устанавливает начальное состояние змейки."""
+        self.positions: list = [START_POSITION]
+        self.direction: tuple = RIGHT
         self.speed = SPEED
 
     def move(self, apple: Apple) -> None:
@@ -124,10 +128,6 @@ class Snake(GameObject):
             else:
                 self.positions.pop()
 
-    def reset(self) -> None:
-        """Сброс змейки в первоначальное состояние"""
-        self.__init__()
-
     def update_direction(self) -> None:
         """Обновляет направление движения змейки."""
         if self.next_direction:
@@ -148,7 +148,6 @@ class Snake(GameObject):
 
 def main() -> None:
     """Главная функция."""
-
     pygame.init()
 
     snake = Snake()
