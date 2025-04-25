@@ -63,7 +63,7 @@ class GameObject:
     """Базовый класс, от которого наследуются другие игровые объекты."""
 
     def __init__(self) -> None:
-        """Инициализатора класса."""
+        """Инициализатор класса."""
         self.position: tuple = START_POSITION
         self.body_color: tuple = SNAKE_COLOR
 
@@ -76,7 +76,7 @@ class Apple(GameObject):
     """Класс яблока."""
 
     def __init__(self) -> None:
-        """Инициализатора класса."""
+        """Инициализатор класса."""
         super().__init__()
         self.body_color = APPLE_COLOR
         self.randomize_position()
@@ -97,7 +97,7 @@ class Snake(GameObject):
     """Класс змейки."""
 
     def __init__(self) -> None:
-        """Инициализатора класса."""
+        """Инициализатор класса."""
         super().__init__()
         self.next_direction: tuple | None = None
         self.body_color: tuple = SNAKE_COLOR
