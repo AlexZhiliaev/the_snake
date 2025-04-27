@@ -62,7 +62,9 @@ def handle_keys(game_object) -> None:
 class GameObject:
     """Базовый класс, от которого наследуются другие игровые объекты."""
 
-    def __init__(self, color: tuple, position: tuple = START_POSITION) -> None:
+    def __init__(self,
+                 color: tuple = SNAKE_COLOR,
+                 position: tuple = START_POSITION) -> None:
         """Инициализатор класса."""
         self.position: tuple = position
         self.body_color: tuple = color
@@ -87,7 +89,7 @@ class Apple(GameObject):
     """Класс яблока."""
 
     def __init__(self,
-                 occupied_cells: list,
+                 occupied_cells: tuple = (0, 0),
                  color: tuple = APPLE_COLOR,
                  position: tuple = START_POSITION
                  ) -> None:
@@ -95,7 +97,7 @@ class Apple(GameObject):
         super().__init__(color, position)
         self.randomize_position(occupied_cells)
 
-    def randomize_position(self, occupied_cells: list) -> None:
+    def randomize_position(self, occupied_cells: tuple) -> None:
         """Устанавливает случайное положение яблока на игровом поле."""
         while self.position in occupied_cells:
             self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
@@ -168,7 +170,7 @@ def main() -> None:
     """Главная функция."""
     pg.init()
     snake = Snake()
-    apple = Apple(occupied_cells=[START_POSITION])
+    apple = Apple((START_POSITION,))
 
     while True:
 
@@ -186,7 +188,7 @@ def main() -> None:
         # Логика съедения яблока.
         if snake.new_head_position == apple.position:
             snake.eating_apple()
-            apple.randomize_position(snake.positions)
+            apple.randomize_position(tuple(snake.positions))
 
         # Столкновение с хвостом.
         if snake.new_head_position in snake.positions[1:]:
