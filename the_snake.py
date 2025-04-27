@@ -42,21 +42,37 @@ pg.display.set_caption('Змейка')
 clock = pg.time.Clock()
 
 
+def quit():
+    """Выход из программы"""
+    pg.quit()
+    raise SystemExit
+
+
 def handle_keys(game_object) -> None:
     """Обрабатывает нажатия клавиш."""
     for event in pg.event.get():
         if event.type == pg.QUIT:
-            pg.quit()
-            raise SystemExit
+            quit()
         elif event.type == pg.KEYDOWN:
-            if event.key == pg.K_UP and game_object.direction != DOWN:
-                game_object.next_direction = UP
-            elif event.key == pg.K_DOWN and game_object.direction != UP:
-                game_object.next_direction = DOWN
-            elif event.key == pg.K_LEFT and game_object.direction != RIGHT:
-                game_object.next_direction = LEFT
-            elif event.key == pg.K_RIGHT and game_object.direction != LEFT:
-                game_object.next_direction = RIGHT
+            handle_keydown(event, game_object)
+
+
+def handle_keydown(event: pg.event.Event, game_object) -> None:
+    """Обработка нажатия клавиш."""
+    if event.key == pg.K_UP and game_object.direction != DOWN:
+        game_object.update_direction(UP)
+    elif event.key == pg.K_DOWN and game_object.direction != UP:
+        game_object.update_direction(DOWN)
+    elif event.key == pg.K_LEFT and game_object.direction != RIGHT:
+        game_object.update_direction(LEFT)
+    elif event.key == pg.K_RIGHT and game_object.direction != LEFT:
+        game_object.update_direction(RIGHT)
+    elif event.key == pg.K_ESCAPE:
+        quit()
+    elif event.key == pg.K_1:
+        game_object.speed -= 1
+    elif event.key == pg.K_2:
+        game_object.speed += 1
 
 
 class GameObject:
@@ -75,11 +91,9 @@ class GameObject:
     def draw_one_cell(self,
                       position: tuple,
                       color: tuple | None = None,
-                      border_color: tuple = BORDER_COLOR,
-                      ) -> None:
+                      border_color: tuple = BORDER_COLOR) -> None:
         """Отрисовка одной клетки"""
-        if color is None:
-            color = self.body_color
+        color = color or self.body_color
         rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, color, rect)
         pg.draw.rect(screen, border_color, rect, 1)
@@ -89,19 +103,22 @@ class Apple(GameObject):
     """Класс яблока."""
 
     def __init__(self,
-                 occupied_cells: tuple = (0, 0),
+                 occupied_cells: list[tuple[int, int]] | None = None,
                  color: tuple = APPLE_COLOR,
-                 position: tuple = START_POSITION
-                 ) -> None:
+                 position: tuple = START_POSITION) -> None:
         """Инициализатор класса."""
         super().__init__(color, position)
+        occupied_cells = occupied_cells or []
         self.randomize_position(occupied_cells)
 
-    def randomize_position(self, occupied_cells: tuple) -> None:
+    def randomize_position(self,
+                           occupied_cells: list[tuple[int, int]]) -> None:
         """Устанавливает случайное положение яблока на игровом поле."""
-        while self.position in occupied_cells:
+        while True:
             self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
                              randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
+            if self.position not in occupied_cells:
+                break
 
     def draw(self) -> None:
         """Отрисовка яблока."""
@@ -113,12 +130,9 @@ class Snake(GameObject):
 
     def __init__(self,
                  color: tuple = SNAKE_COLOR,
-                 position: tuple = START_POSITION
-                 ) -> None:
+                 position: tuple = START_POSITION) -> None:
         """Инициализатор класса."""
         super().__init__(color, position)
-        self.next_direction: tuple | None = None
-        self.new_head_position: tuple
         self.last: tuple
         self.reset()
         self.direction: tuple = RIGHT
@@ -138,8 +152,8 @@ class Snake(GameObject):
             x_head_position + dx * GRID_SIZE) % SCREEN_WIDTH
         new_y_head_pos = (
             y_head_position + dy * GRID_SIZE) % SCREEN_HEIGHT
-        self.new_head_position = (new_x_head_pos, new_y_head_pos)
-        self.positions.insert(0, self.new_head_position)
+        new_head_position = (new_x_head_pos, new_y_head_pos)
+        self.positions.insert(0, new_head_position)
 
         if len(self.positions) > self.length:
             self.last = self.positions.pop()
@@ -149,17 +163,17 @@ class Snake(GameObject):
         self.speed += 1
         self.length += 1
 
-    def update_direction(self) -> None:
+    def update_direction(self, direction: tuple) -> None:
         """Обновляет направление движения змейки."""
-        if self.next_direction:
-            self.direction = self.next_direction
-            self.next_direction = None
+        self.direction = direction
 
     def draw(self) -> None:
         """Отрисовка змейки."""
-        self.draw_one_cell(self.new_head_position)
+        # Затираем хвост.
         self.draw_one_cell(self.last, BOARD_BACKGROUND_COLOR,
                            BOARD_BACKGROUND_COLOR)
+        # Рисуем голову.
+        self.draw_one_cell(self.positions[0])
 
     def get_head_position(self) -> tuple:
         """Возвращает позицию головы змейки."""
@@ -170,7 +184,7 @@ def main() -> None:
     """Главная функция."""
     pg.init()
     snake = Snake()
-    apple = Apple((START_POSITION,))
+    apple = Apple(snake.positions)
 
     while True:
 
@@ -179,22 +193,19 @@ def main() -> None:
         # Обработка клавиш.
         handle_keys(snake)
 
-        # Обновление направления змейки.
-        snake.update_direction()
-
         # Обновление позиций.
         snake.move()
 
         # Логика съедения яблока.
-        if snake.new_head_position == apple.position:
+        if snake.positions[0] == apple.position:
             snake.eating_apple()
-            apple.randomize_position(tuple(snake.positions))
+            apple.randomize_position(snake.positions)
 
         # Столкновение с хвостом.
-        if snake.new_head_position in snake.positions[1:]:
+        elif snake.positions[0] in snake.positions[1:]:
             snake.reset()
+            apple.randomize_position(snake.positions)
             screen.fill(BOARD_BACKGROUND_COLOR)
-            continue
 
         # Отрисовка.
         apple.draw()
