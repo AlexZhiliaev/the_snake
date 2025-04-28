@@ -173,7 +173,7 @@ class Snake(GameObject):
         self.draw_one_cell(self.last, BOARD_BACKGROUND_COLOR,
                            BOARD_BACKGROUND_COLOR)
         # Рисуем голову.
-        self.draw_one_cell(self.positions[0])
+        self.draw_one_cell(self.get_head_position())
 
     def get_head_position(self) -> tuple:
         """Возвращает позицию головы змейки."""
@@ -195,14 +195,15 @@ def main() -> None:
 
         # Обновление позиций.
         snake.move()
-
+        head_position = snake.get_head_position()
+        
         # Логика съедения яблока.
-        if snake.positions[0] == apple.position:
+        if head_position == apple.position:
             snake.eating_apple()
             apple.randomize_position(snake.positions)
 
         # Столкновение с хвостом.
-        elif snake.positions[0] in snake.positions[1:]:
+        elif head_position in snake.positions[1:]:
             snake.reset()
             apple.randomize_position(snake.positions)
             screen.fill(BOARD_BACKGROUND_COLOR)
