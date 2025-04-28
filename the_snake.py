@@ -196,7 +196,7 @@ def main() -> None:
         # Обновление позиций.
         snake.move()
         head_position = snake.get_head_position()
-        
+
         # Логика съедения яблока.
         if head_position == apple.position:
             snake.eating_apple()
