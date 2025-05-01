@@ -27,7 +27,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Начальная скорость движения змейки:
-SPEED = 5
+SPEED = 10
 
 # Стартовая позиция змейки:
 START_POSITION = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2))
